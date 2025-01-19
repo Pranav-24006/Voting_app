@@ -22,7 +22,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.voting_app.R;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Firebase;
@@ -37,8 +36,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class SignupActivity extends AppCompatActivity {
     private CircleImageView userProfile;
     private EditText userName,userEmail, userPassword, userRegId;
-    private Button signUpBtn;
-    Uri mainUri= null;
     private FirebaseAuth mAuth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,81 +43,87 @@ public class SignupActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_signup);
 
-        findViewById(R.id.have_acc).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
+        findViewById(R.id.have_acc).setOnClickListener(v -> {
+            Intent intent  = new Intent(SignupActivity.this,LoginActivity.class);
+            startActivity(intent);
+            this.finish();});
 
         userProfile = findViewById(R.id.profile_image);
         userName = findViewById(R.id.user_name);
         userPassword = findViewById(R.id.user_password);
         userEmail = findViewById(R.id.user_email);
         userRegId = findViewById(R.id.user_reg_id);
-        signUpBtn = findViewById(R.id.signup_btn);
+        Button signUpBtn = findViewById(R.id.signup_btn);
 
         mAuth = FirebaseAuth.getInstance();
 
-        userProfile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M){
-                    if(ContextCompat.checkSelfPermission(
-                            SignupActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
-                        ActivityCompat.requestPermissions(SignupActivity.this,new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},1);
-                    }
-                    else{
-                        selectImageFromGallery();
-                    }
-                }else{
-                    selectImageFromGallery();
-                }
+        userProfile.setOnClickListener(v -> {
+            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M){
+                checkAndRequestForPermission();
+            }else{
+                selectImageFromGallery();
             }
         });
-        signUpBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                String name = userName.getText().toString().trim();
-                String email = userEmail.getText().toString().trim();
-                String password = userPassword.getText().toString().trim();
-                String regId = userRegId.getText().toString().trim();
-                if(TextUtils.isEmpty(name)||TextUtils.isEmpty(email)||TextUtils.isEmpty(password)||TextUtils.isEmpty(regId)){
-                    Toast.makeText(SignupActivity.this,"Please fill all fields",Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    createUser(email,password);
-                }
+        signUpBtn.setOnClickListener(v->{
+            String name = userName.getText().toString().trim();
+            String email = userEmail.getText().toString().trim();
+            String password = userPassword.getText().toString().trim();
+            String regId = userRegId.getText().toString().trim();
+            if(TextUtils.isEmpty(name)||TextUtils.isEmpty(email)||TextUtils.isEmpty(password)||TextUtils.isEmpty(regId)){
+                Toast.makeText(SignupActivity.this,"Please fill all fields",Toast.LENGTH_SHORT).show();
+            }
+            else {
+                createUser(email, password);
             }
         });
     }
 
     private void createUser(String email, String password) {
         mAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(
-                new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()){
-                            Toast.makeText(SignupActivity.this,"Use created successfully",Toast.LENGTH_SHORT).show();
-                            onBackPressed();
-                        }
-                        else{
-                            Toast.makeText(SignupActivity.this,"Failed, Try Again",Toast.LENGTH_SHORT).show();
-                        }
+                task -> {
+                    if(task.isSuccessful()){
+                        Toast.makeText(SignupActivity.this,"Use created successfully",Toast.LENGTH_SHORT).show();
+                        Intent intent  = new Intent(SignupActivity.this,LoginActivity.class);
+                        startActivity(intent);
+                        SignupActivity.this.finish();
+                    }
+                    else{
+                        Toast.makeText(SignupActivity.this,"Failed, Try Again",Toast.LENGTH_SHORT).show();
                     }
                 }
-                ).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(SignupActivity.this,"Something went wrong",Toast.LENGTH_SHORT).show();
-                    }
-                });
+        ).addOnFailureListener(v-> {
+                Toast.makeText(SignupActivity.this,"Something went wrong",Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void selectImageFromGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
+        //noinspection deprecation
         startActivityForResult(intent, 1);
+    }
+
+    private void checkAndRequestForPermission() {
+        final int PReqCode = 1;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // For Android 13+ (API 33+)
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.READ_MEDIA_IMAGES}, PReqCode);
+            } else {
+                selectImageFromGallery();
+            }
+        } else {
+            // For Android 6.0 to 12 (API 23-32)
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, PReqCode);
+            } else {
+                selectImageFromGallery();
+            }
+        }
     }
 
     @Override
