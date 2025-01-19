@@ -22,11 +22,18 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.voting_app.R;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Firebase;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
@@ -34,6 +41,7 @@ import java.io.File;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class SignupActivity extends AppCompatActivity {
+    Uri mainUri = null;
     private CircleImageView userProfile;
     private EditText userName,userEmail, userPassword, userRegId;
     private FirebaseAuth mAuth;
@@ -69,8 +77,21 @@ public class SignupActivity extends AppCompatActivity {
             String email = userEmail.getText().toString().trim();
             String password = userPassword.getText().toString().trim();
             String regId = userRegId.getText().toString().trim();
-            if(TextUtils.isEmpty(name)||TextUtils.isEmpty(email)||TextUtils.isEmpty(password)||TextUtils.isEmpty(regId)){
-                Toast.makeText(SignupActivity.this,"Please fill all fields",Toast.LENGTH_SHORT).show();
+            if (TextUtils.isEmpty(name)) {
+                Toast.makeText(SignupActivity.this, "Name is required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (TextUtils.isEmpty(email)) {
+                Toast.makeText(SignupActivity.this, "Email is required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (TextUtils.isEmpty(password) || password.length() <= 8) {
+                Toast.makeText(SignupActivity.this, "Password must be longer than 8 characters", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (TextUtils.isEmpty(regId)) {
+                Toast.makeText(SignupActivity.this, "Registration ID is required", Toast.LENGTH_SHORT).show();
+                return;
             }
             else {
                 createUser(email, password);
@@ -82,10 +103,8 @@ public class SignupActivity extends AppCompatActivity {
         mAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(
                 task -> {
                     if(task.isSuccessful()){
-                        Toast.makeText(SignupActivity.this,"Use created successfully",Toast.LENGTH_SHORT).show();
-                        Intent intent  = new Intent(SignupActivity.this,LoginActivity.class);
-                        startActivity(intent);
-                        SignupActivity.this.finish();
+                        verifyEmail(userName,mAuth.getCurrentUser());
+                        Toast.makeText(SignupActivity.this,"User created successfully",Toast.LENGTH_SHORT).show();
                     }
                     else{
                         Toast.makeText(SignupActivity.this,"Failed, Try Again",Toast.LENGTH_SHORT).show();
@@ -94,6 +113,47 @@ public class SignupActivity extends AppCompatActivity {
         ).addOnFailureListener(v-> {
                 Toast.makeText(SignupActivity.this,"Something went wrong",Toast.LENGTH_SHORT).show();
         });
+    }
+    private void updateUserInfo(String name, Uri pickedImg, FirebaseUser currentUser) {
+        StorageReference mStorage = FirebaseStorage.getInstance().getReference().child("users_photos");
+        StorageReference imageFilePath = mStorage.child(pickedImg.getLastPathSegment());
+        imageFilePath.putFile(pickedImg).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                imageFilePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        UserProfileChangeRequest profChange = new UserProfileChangeRequest.Builder().setDisplayName(name).setPhotoUri(pickedImg).build();
+                        currentUser.updateProfile(profChange).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if(task.isSuccessful()){
+                                    Intent intent  = new Intent(getApplicationContext(),LoginActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+    private void verifyEmail(EditText userName,FirebaseUser user){
+        if(user!=null){
+            user.sendEmailVerification().addOnCompleteListener(task->{
+                if(task.isSuccessful()){
+
+                    Toast.makeText(SignupActivity.this,"Verification Email Sent",Toast.LENGTH_SHORT).show();
+                    FirebaseAuth.getInstance().signOut();
+                    updateUserInfo(userName.getText().toString().trim(),mainUri,user);
+                }
+                else{
+                    Toast.makeText(SignupActivity.this, "Failed to send verification email. Please try again.", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            });
+        }
     }
 
     private void selectImageFromGallery() {
@@ -149,13 +209,14 @@ public class SignupActivity extends AppCompatActivity {
             Uri croppedImageUri = UCrop.getOutput(data);
             if (croppedImageUri != null) {
                 // Step 6: Set the cropped image to the profile ImageView
+                mainUri = croppedImageUri;
                 userProfile.setImageURI(croppedImageUri);
             }
         } else if (requestCode == UCrop.REQUEST_CROP && resultCode == UCrop.RESULT_ERROR) {
             // Handle cropping error
             Throwable cropError = UCrop.getError(data);
             if (cropError != null) {
-                cropError.printStackTrace();
+                Toast.makeText(SignupActivity.this, "Error cropping image: " + cropError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
     }
