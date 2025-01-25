@@ -93,7 +93,7 @@
                 android:layout_margin="8dp"
                 android:backgroundTint="@color/black"
                 android:padding="8dp"
-                android:text="Login"
+                android:text="Sign Up"
                 android:textAllCaps="false" />
 
         </LinearLayout>

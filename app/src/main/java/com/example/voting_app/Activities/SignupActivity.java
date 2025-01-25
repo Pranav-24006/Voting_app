@@ -4,6 +4,7 @@ import static java.sql.Types.NULL;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -15,25 +16,15 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.voting_app.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.Firebase;
-import com.google.firebase.auth.AuthResult;
+import com.example.voting_app.SplashScreen;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
@@ -45,14 +36,22 @@ public class SignupActivity extends AppCompatActivity {
     private CircleImageView userProfile;
     private EditText userName,userEmail, userPassword, userRegId;
     private FirebaseAuth mAuth;
+    public static final String PREFERENCES = "prefKey";
+    public static final String Name = "nameKey";
+    public static final String Email = "emailKey";
+    public static final String Password = "passwordKey";
+    public static final String RegistrationId = "registrationIdKey";
+    public static final String Image = "imageKey";
+    SharedPreferences sharedPreferences;
+    String name, email, password, regId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_signup);
-
+        sharedPreferences = getApplicationContext().getSharedPreferences(PREFERENCES,MODE_PRIVATE);
         findViewById(R.id.have_acc).setOnClickListener(v -> {
-            Intent intent  = new Intent(SignupActivity.this,LoginActivity.class);
+            Intent intent  = new Intent(SignupActivity.this, SplashScreen.class);
             startActivity(intent);
             this.finish();});
 
@@ -73,10 +72,10 @@ public class SignupActivity extends AppCompatActivity {
             }
         });
         signUpBtn.setOnClickListener(v->{
-            String name = userName.getText().toString().trim();
-            String email = userEmail.getText().toString().trim();
-            String password = userPassword.getText().toString().trim();
-            String regId = userRegId.getText().toString().trim();
+            name = userName.getText().toString().trim();
+            email = userEmail.getText().toString().trim();
+            password = userPassword.getText().toString().trim();
+            regId = userRegId.getText().toString().trim();
             if (TextUtils.isEmpty(name)) {
                 Toast.makeText(SignupActivity.this, "Name is required", Toast.LENGTH_SHORT).show();
                 return;
@@ -114,39 +113,23 @@ public class SignupActivity extends AppCompatActivity {
                 Toast.makeText(SignupActivity.this,"Something went wrong",Toast.LENGTH_SHORT).show();
         });
     }
-    private void updateUserInfo(String name, Uri pickedImg, FirebaseUser currentUser) {
-        StorageReference mStorage = FirebaseStorage.getInstance().getReference().child("users_photos");
-        StorageReference imageFilePath = mStorage.child(pickedImg.getLastPathSegment());
-        imageFilePath.putFile(pickedImg).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                imageFilePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        UserProfileChangeRequest profChange = new UserProfileChangeRequest.Builder().setDisplayName(name).setPhotoUri(pickedImg).build();
-                        currentUser.updateProfile(profChange).addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if(task.isSuccessful()){
-                                    Intent intent  = new Intent(getApplicationContext(),LoginActivity.class);
-                                    startActivity(intent);
-                                    finish();
-                                }
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    }
+
     private void verifyEmail(EditText userName,FirebaseUser user){
         if(user!=null){
             user.sendEmailVerification().addOnCompleteListener(task->{
                 if(task.isSuccessful()){
-
+                    SharedPreferences.Editor pref = sharedPreferences.edit();
+                    pref.putString(Name, name);
+                    pref.putString(Password,password);
+                    pref.putString(RegistrationId,regId);
+                    pref.putString(Email,email);
+                    pref.putString(Image,mainUri.toString());
+                    pref.commit();
                     Toast.makeText(SignupActivity.this,"Verification Email Sent",Toast.LENGTH_SHORT).show();
+
                     FirebaseAuth.getInstance().signOut();
-                    updateUserInfo(userName.getText().toString().trim(),mainUri,user);
+                    startActivity(new Intent(this, LoginActivity.class));
+                    finish();
                 }
                 else{
                     Toast.makeText(SignupActivity.this, "Failed to send verification email. Please try again.", Toast.LENGTH_SHORT).show();
