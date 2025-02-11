@@ -19,6 +19,9 @@
         android:theme="@style/Theme.Voting_app"
         tools:targetApi="31">
         <activity
+            android:name=".Activities.Create_Candidate_Activity"
+            android:exported="false" />
+        <activity
             android:name=".Activities.PasswordResetActivity"
             android:exported="false" />
         <activity

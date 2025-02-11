@@ -54,5 +54,6 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:23.1.0")
     implementation("com.vanniktech:android-image-cropper:4.6.0")
     implementation ("com.github.yalantis:ucrop:2.2.10")
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
 }
 

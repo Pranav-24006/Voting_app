@@ -35,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     public static final String Password = "passwordKey";
     public static final String RegistrationId = "registrationIdKey";
     public static final String Image = "imageKey";
+    public static final String UploadData = "uploadData";
     SharedPreferences sharedPreferences;
 
     StorageReference reference;
@@ -76,75 +77,86 @@ public class LoginActivity extends AppCompatActivity {
         reference = FirebaseStorage.getInstance().getReference();
         if (user != null) {
             if (user.isEmailVerified()) {
-                String name = sharedPreferences.getString(Name, null);
-                String password = sharedPreferences.getString(Password, null);
-                String email = sharedPreferences.getString(Email, null);
-                String regId = sharedPreferences.getString(RegistrationId, null);
-                String image = sharedPreferences.getString(Image, null);
+                boolean bol = sharedPreferences.getBoolean(UploadData, false);
+                if (bol) {
+                    startActivity(new Intent(this,HomeActivity.class));
+                    finish();
+                } else {
+                    String name = sharedPreferences.getString(Name, null);
+                    String password = sharedPreferences.getString(Password, null);
+                    String email = sharedPreferences.getString(Email, null);
+                    String regId = sharedPreferences.getString(RegistrationId, null);
+                    String image = sharedPreferences.getString(Image, null);
 
-                if (name == null || password == null || email == null || regId == null || image == null) {
-                    Toast.makeText(this, "Incomplete data. Please sign up again.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                String uid = user.getUid();
-
-                // Initialize Firebase Storage reference
-                if (reference == null) {
-                    Toast.makeText(this, "Storage reference not initialized", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                StorageReference imagePath = reference.child("Profile").child(uid + ".jpg");
-
-                // Show a progress dialog
-                ProgressDialog progressDialog = new ProgressDialog(this);
-                progressDialog.setMessage("Uploading profile...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
-
-                imagePath.putFile(Uri.parse(image)).addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        imagePath.getDownloadUrl().addOnSuccessListener(uri -> {
-                            Map<String, String> map = new HashMap<>();
-                            map.put("name", name);
-                            map.put("email", email);
-                            map.put("password", password);
-                            map.put("registrationId", regId);
-                            map.put("image", uri.toString());
-                            map.put("uid", uid);
-
-                            // Write data to Firestore
-                            firebaseFirestore.collection("Users")
-                                    .document(uid)
-                                    .set(map)
-                                    .addOnCompleteListener(task1 -> {
-                                        progressDialog.dismiss();
-                                        if (task1.isSuccessful()) {
-                                            Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
-                                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                                            finish();
-                                        } else {
-                                            Toast.makeText(LoginActivity.this, "Failed to save user data to Firestore: " + task1.getException(), Toast.LENGTH_LONG).show();
-                                        }
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        progressDialog.dismiss();
-                                        Toast.makeText(LoginActivity.this, "Firestore error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                                    });
-                        }).addOnFailureListener(e -> {
-                            progressDialog.dismiss();
-                            Toast.makeText(LoginActivity.this, "Failed to get image URL: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        });
-                    } else {
-                        progressDialog.dismiss();
-                        Toast.makeText(LoginActivity.this, "Image upload failed: " + task.getException(), Toast.LENGTH_LONG).show();
+                    if (name == null || password == null || email == null || regId == null || image == null) {
+                        Toast.makeText(this, "Incomplete data. Please sign up again.", Toast.LENGTH_SHORT).show();
+                        return;
                     }
-                });
-            } else {
-                mAuth.signOut();
-                Toast.makeText(this, "Please complete the email verification", Toast.LENGTH_SHORT).show();
-            }
+
+                    String uid = user.getUid();
+
+                    // Initialize Firebase Storage reference
+                    if (reference == null) {
+                        Toast.makeText(this, "Storage reference not initialized", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    StorageReference imagePath = reference.child("Profile").child(uid + ".jpg");
+
+                    // Show a progress dialog
+                    ProgressDialog progressDialog = new ProgressDialog(this);
+                    progressDialog.setMessage("Uploading profile...");
+                    progressDialog.setCancelable(false);
+                    progressDialog.show();
+
+                    imagePath.putFile(Uri.parse(image)).addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            imagePath.getDownloadUrl().addOnSuccessListener(uri -> {
+                                Map<String, String> map = new HashMap<>();
+                                map.put("name", name);
+                                map.put("email", email);
+                                map.put("password", password);
+                                map.put("registrationId", regId);
+                                map.put("image", uri.toString());
+                                map.put("uid", uid);
+
+                                // Write data to Firestore
+                                firebaseFirestore.collection("Users")
+                                        .document(uid)
+                                        .set(map)
+                                        .addOnCompleteListener(task1 -> {
+                                            progressDialog.dismiss();
+                                            if (task1.isSuccessful()) {
+                                                SharedPreferences.Editor pref = sharedPreferences.edit();
+                                                pref.putBoolean(UploadData,true);
+                                                pref.commit();
+                                                Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
+                                                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                                                finish();
+
+                                            } else {
+                                                Toast.makeText(LoginActivity.this, "Failed to save user data to Firestore: " + task1.getException(), Toast.LENGTH_LONG).show();
+                                            }
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            progressDialog.dismiss();
+                                            Toast.makeText(LoginActivity.this, "Firestore error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                        });
+                            }).addOnFailureListener(e -> {
+                                progressDialog.dismiss();
+                                Toast.makeText(LoginActivity.this, "Failed to get image URL: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            });
+                        } else {
+                            progressDialog.dismiss();
+                            Toast.makeText(LoginActivity.this, "Image upload failed: " + task.getException(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            } else{
+                    mAuth.signOut();
+                    Toast.makeText(this, "Please complete the email verification", Toast.LENGTH_SHORT).show();
+                }
+
         } else {
             Toast.makeText(this, "Invalid user", Toast.LENGTH_SHORT).show();
         }

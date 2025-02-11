@@ -92,6 +92,10 @@ public class SignupActivity extends AppCompatActivity {
                 Toast.makeText(SignupActivity.this, "Registration ID is required", Toast.LENGTH_SHORT).show();
                 return;
             }
+            if(mainUri==null){
+                Toast.makeText(SignupActivity.this, "Your profile image is required", Toast.LENGTH_SHORT).show();
+                return;
+            }
             else {
                 createUser(email, password);
             }
