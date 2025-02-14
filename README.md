@@ -21,7 +21,7 @@ A mobile voting application built using Java for Android. This app allows users 
 ## Tech Stack
 - **Language:** Java
 - **UI Design:** XML
-- **Database:** Firebase/SQLite (if applicable)
+- **Database:** Firebase
 - **Development Environment:** Android Studio
 
 
