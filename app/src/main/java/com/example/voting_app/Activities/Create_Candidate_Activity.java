@@ -39,7 +39,7 @@ public class Create_Candidate_Activity extends AppCompatActivity {
     private CircleImageView candidateImg;
     private EditText candidateName,candidateRegID, candidateBranch;
     private Spinner candidateSpinner;
-    private String [] candPost = {"President","Vice-President","General Secretary"};
+    private final String [] candPost = {"President","Vice-President","General Secretary"};
     private Button submitBtn;
     private Uri mainUri = null;
     StorageReference reference ;

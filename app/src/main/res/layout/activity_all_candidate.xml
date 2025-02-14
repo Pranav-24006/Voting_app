@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activities.AllCandidateActivity">
+
+
+<!--        <cn.iwgang.countdownview.CountdownView-->
+<!--            android:id="@+id/countdownView"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_centerInParent="true"-->
+<!--            android:layout_marginStart="16dp"-->
+<!--            android:layout_marginTop="16dp"-->
+<!--            android:layout_marginEnd="16dp"-->
+<!--            app:isHideTimeBackground="false"-->
+<!--            app:isShowDay="true"-->
+<!--            app:isShowHour="true"-->
+<!--            app:isShowMillisecond="true"-->
+<!--            app:isShowMinute="true"-->
+<!--            app:isShowSecond="true"-->
+<!--            app:isTimeTextBold="true"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            app:suffixDay="d"-->
+<!--            app:suffixGravity="bottom"-->
+<!--            app:suffixHour="h"-->
+<!--            app:suffixMillisecond="ms"-->
+<!--            app:suffixMinute="m"-->
+<!--            app:suffixSecond="s"-->
+<!--            android:visibility="visible"-->
+<!--            app:suffixTextColor="#000000"-->
+<!--            app:suffixTextSize="12sp"-->
+<!--            app:timeBgColor="@color/black"-->
+<!--            app:timeBgRadius="4dp"-->
+<!--            app:timeTextColor="#FFFFFF"-->
+<!--            app:timeTextSize="32sp" />-->
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/candidates_rv"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/start"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="Start"
+        android:textAllCaps="false"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

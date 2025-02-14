@@ -72,6 +72,6 @@
         android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="@+id/candidate_spinner"
         app:layout_constraintStart_toStartOf="@+id/candidate_spinner"
-        app:layout_constraintTop_toBottomOf="@+id/candidate_branch" />
+        app:layout_constraintTop_toBottomOf="@+id/candidate_spinner" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
