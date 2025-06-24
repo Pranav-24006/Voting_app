@@ -70,7 +70,7 @@ public class HomeActivity extends AppCompatActivity {
                 String regId = task.getResult().getString("registrationId");
                 String image = task.getResult().getString("image");
                 assert email !=null;
-                if(email.equals("pranavverma006@gmail.com")){
+                if(email.equals(ADMIN_MAIL)){
                     createBtn.setVisibility(View.VISIBLE);
                     startBtn.setVisibility(View.VISIBLE);
                     voteBtn.setVisibility(View.GONE);
